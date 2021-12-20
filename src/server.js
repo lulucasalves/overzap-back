@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const router = require('./routes')
-require('./Config/mongodb')
+require('./Config/Mongodb')
 require('./whatsapp')
 
 //======================================================//

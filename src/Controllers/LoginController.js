@@ -1,5 +1,5 @@
 const passwordhash = require('password-hash')
-const Restaurant = require('../Models/restaurant')
+const Restaurants = require('../Models/Restaurants')
 
 exports.signup = async (req, res) => {
   const { senha } = req.body
@@ -7,7 +7,7 @@ exports.signup = async (req, res) => {
   const passwordHash = passwordhash.generate(senha)
 
   req.body.senha = passwordHash
-  Restaurant.create({ ...req.body }, err => {
+  Restaurants.create({ ...req.body }, err => {
     if (err) {
       res
         .status(400)

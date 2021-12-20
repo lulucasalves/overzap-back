@@ -19,7 +19,7 @@ class Connection {
         console.log('Conexão estabelicida com o MongoDB')
       })
       .catch(error => {
-        console.log(`Erro ao estabelecer conexão com mongoDB: ${error}`)
+        console.error(`Erro ao estabelecer conexão com mongoDB: ${error}`)
       })
   }
 }
