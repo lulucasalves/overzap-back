@@ -4,13 +4,13 @@ const Schema = mongoose.Schema
 const Context = Schema({
   tipo: {
     type: String,
-    enum: ['welcome', 'initial', 'finish', 'address', 'cancel'],
-    required: true
+    required: true,
+    enum: ['welcome', 'initial', 'finish', 'address', 'cancel']
   },
   clienteId: {
     type: mongoose.Types.ObjectId,
-    ref: 'Clients',
-    required: true
+    required: true,
+    ref: 'clients'
   }
 })
 

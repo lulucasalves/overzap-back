@@ -49,7 +49,6 @@ client.on('message', message => {
   let [phone, type] = message.from.split('@')
   phone = phone.substring(2)
 
-  console.log(message)
   if (type == 'c.us') {
     clientMessage(phone, message)
   }
@@ -57,21 +56,23 @@ client.on('message', message => {
 
 client.initialize()
 
-const sendMessage = async (number, text) => {
+const sendMessages = async (number, text) => {
   const phone = `55${number}@c.us`
   const message = text || 'Algo deu errado com a mensagem'
   try {
     client.sendMessage(phone, message)
+    console.log(phone, message)
   } catch (err) {
     console.log(err)
+    console.log('deu ruim')
   }
 }
 
 const clientMessage = async (phone, message) => {
   //formatação
   try {
-    let [restauranteTelefone,] = message.to.split('@')
-    let [clienteTelefone,] = message.from.split('@')
+    let [restauranteTelefone] = message.to.split('@')
+    let [clienteTelefone] = message.from.split('@')
     restauranteTelefone = restauranteTelefone.substring(2)
     clienteTelefone = clienteTelefone.substring(2)
 
@@ -101,10 +102,18 @@ const clientMessage = async (phone, message) => {
       })
     }
 
-    let context = await Context.findOne({ clienteId: cliente })
+    let context = await Context.findOne({ clienteId: cliente._id })
+
+    console.log(
+      'Cliente: ====================================================' +
+        cliente._id
+    )
 
     if (!context) {
-      context = await Context.create({ clientId: client._id, tipo: 'welcome' })
+      context = await Context.create({
+        tipo: 'welcome',
+        clienteId: cliente._id
+      })
     }
 
     if (message.location) {
@@ -123,20 +132,18 @@ const clientMessage = async (phone, message) => {
         { new: true }
       )
     } else {
-      let text = message.body
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
+      let text = message.body.normalize('NFD').toLowerCase()
 
       switch (text) {
         case 'sim':
-          sendMessage(cliente.telefone, 'Sim')
+          sendMessages(cliente.telefone, 'Sim')
+          console.log(cliente.telefone)
           break
         case 'não':
-          sendMessage(cliente.telefone, 'Não')
+          sendMessages(cliente.telefone, 'Não')
           break
         case 'pedido':
-          sendMessage(cliente.telefone, 'Pedido')
+          sendMessages(cliente.telefone, 'Pedido')
           break
         case 'cancelar':
           console.log('cancelas')
