@@ -5,7 +5,8 @@ const Context = Schema({
   tipo: {
     type: String,
     required: true,
-    enum: ['welcome', 'initial', 'finish', 'address', 'cancel']
+    enum: ['welcome', 'initial', 'finish', 'address', 'cancel'],
+    default: 'welcome'
   },
   clienteId: {
     type: mongoose.Types.ObjectId,

@@ -26,7 +26,7 @@ client.on('authenticated', session => {
   sessionConfig = session
   fs.writeFile(sessionPath, JSON.stringify(session), err => {
     if (err) {
-      console.error('falha ao gravar o token')
+      console.error(err)
     }
   })
 })
@@ -35,7 +35,7 @@ client.on('auth_failure', session => {
   sessionConfig = ''
   fs.writeFile(sessionPath, JSON.stringify(session), err => {
     if (err) {
-      console.error('falha ao gravar o token')
+      console.error(err)
     }
   })
 })
@@ -64,7 +64,6 @@ const sendMessages = async (number, text) => {
     console.log(phone, message)
   } catch (err) {
     console.log(err)
-    console.log('deu ruim')
   }
 }
 
@@ -80,12 +79,6 @@ const clientMessage = async (phone, message) => {
     const restaurante = await Restaurants.findOne({
       telefone: restauranteTelefone
     })
-
-    if (restaurante) {
-      console.log(restaurante)
-    } else {
-      console.log('não existe')
-    }
 
     const cliente = await Clients.findOne({
       telefone: clienteTelefone,
@@ -103,11 +96,6 @@ const clientMessage = async (phone, message) => {
     }
 
     let context = await Context.findOne({ clienteId: cliente._id })
-
-    console.log(
-      'Cliente: ====================================================' +
-        cliente._id
-    )
 
     if (!context) {
       context = await Context.create({
@@ -137,7 +125,6 @@ const clientMessage = async (phone, message) => {
       switch (text) {
         case 'sim':
           sendMessages(cliente.telefone, 'Sim')
-          console.log(cliente.telefone)
           break
         case 'não':
           sendMessages(cliente.telefone, 'Não')
@@ -145,15 +132,9 @@ const clientMessage = async (phone, message) => {
         case 'pedido':
           sendMessages(cliente.telefone, 'Pedido')
           break
-        case 'cancelar':
-          console.log('cancelas')
-          break
-        case 'instrucoes':
-          console.log('instrucoes')
-          break
 
         default:
-          console.log('default')
+          sendMessages(cliente.telefone, 'default')
           break
       }
     }
