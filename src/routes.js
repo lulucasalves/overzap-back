@@ -7,7 +7,7 @@ const ClientController = require('./Controllers/ClientController')
 const OrderController = require('./Controllers/OrderController')
 const ProductController = require('./Controllers/ProductController')
 const RestaurantController = require('./Controllers/RestaurantController')
-const { authenticate } = require('./Middleware/Middleware')
+const { authenticate } = require('./Middlewares/Middleware')
 
 //LOGIN
 router.post('/signup', LoginController.signup)

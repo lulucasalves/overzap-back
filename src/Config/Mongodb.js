@@ -2,12 +2,10 @@ require('dotenv/config')
 
 const mongoose = require('mongoose')
 
-
 class Connection {
   constructor() {
     this.dataBaseConnectionMongoDB()
   }
-  
 
   dataBaseConnectionMongoDB() {
     this.mongoDBConnection = mongoose

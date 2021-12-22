@@ -8,7 +8,7 @@ exports.index = async (req, res) => {
       return res.status(400).json({ error: true, message: err })
     }
 
-    return res.status(200).json({ error: false, categorias: doc })
+    return res.status(200).json({ error: false, pedidos: doc })
   })
 }
 
@@ -25,7 +25,7 @@ exports.store = async (req, res) => {
 
     return res
       .status(201)
-      .json({ error: false, message: 'Categoria cadastrada com sucesso' })
+      .json({ error: false, message: 'Pedido cadastrada com sucesso' })
   })
 }
 
@@ -46,7 +46,7 @@ exports.edit = async (req, res) => {
         return res.status(400).json({ error: true, message: err })
       }
 
-      return res.status(200).json({ error: false, categorias: doc })
+      return res.status(200).json({ error: false, pedidos: doc })
     }
   )
 }
@@ -68,7 +68,7 @@ exports.delete = async (req, res) => {
 
       return res
         .status(200)
-        .json({ error: false, message: 'Categoria apagada com sucesso' })
+        .json({ error: false, message: 'Pedido apagado com sucesso' })
     }
   )
 }
