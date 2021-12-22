@@ -31,6 +31,7 @@ router.post('/order', authenticate, OrderController.store)
 router.post('/order/:order_id', authenticate, OrderController.edit)
 router.delete('/order/:order_id', authenticate, OrderController.delete)
 router.get('/orders', authenticate, OrderController.index)
+router.post('/order/:order_id/add', authenticate, OrderController.addItem)
 
 //RESTAURANTES
 router.post(

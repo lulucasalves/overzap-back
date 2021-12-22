@@ -1,4 +1,6 @@
 const Order = require('../Models/Order')
+const Product = require('../Models/Product')
+const OrderProduct = require('../Models/OrderProduct')
 
 exports.index = async (req, res) => {
   const { restaurante_id: id } = req.headers
@@ -25,7 +27,7 @@ exports.store = async (req, res) => {
 
     return res
       .status(201)
-      .json({ error: false, message: 'Pedido cadastrada com sucesso' })
+      .json({ error: false, message: 'Pedido cadastrado com sucesso' })
   })
 }
 
@@ -71,4 +73,31 @@ exports.delete = async (req, res) => {
         .json({ error: false, message: 'Pedido apagado com sucesso' })
     }
   )
+}
+
+exports.addItem = async (req, res) => {
+  const { restaurante_id: id } = req.headers
+  const { order_id } = req.params
+  const { produto_id, quantidade, observacao } = req.body
+  const produto = await Product.findById(produto_id)
+
+  if (produto) {
+    const doc = {
+      pedidoId: order_id,
+      produtoId: produto_id,
+      valor: produto.valor,
+      quantidade: quantidade,
+      obeservacao: observacao
+    }
+
+    OrderProduct.create(doc, err => {
+      if (err) {
+        return res.status(400).json({ error: true, message: err.message })
+      }
+    })
+  }
+
+  return res
+    .status(200)
+    .json({ error: false, message: 'Pedido adicionado com sucesso' })
 }
