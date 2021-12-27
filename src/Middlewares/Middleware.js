@@ -8,8 +8,6 @@ function authenticate(req, res, next) {
     const { restaurante_id } = jwt.verify(token, process.env.SECRET)
     req.headers.restaurante_id = restaurante_id
 
-    console.log(restaurante_id)
-
     next()
   } catch (err) {
     return res.status(103).json({ error: true, message: 'Token inválido', err })

@@ -27,7 +27,6 @@ const OrderProduct = new Schema({
 })
 
 OrderProduct.post('validate', async (doc, next) => {
-  console.log(doc)
   const pedido = await Order.findById(doc.pedidoId)
   const produto = await Product.findById(doc.produtoId)
 

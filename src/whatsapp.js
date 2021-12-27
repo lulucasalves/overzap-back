@@ -75,24 +75,56 @@ const welcomeMessage = async client => {
 
   let message = `Olá, eu sou o bot de atendimento do ${restaurant.nome} e estou aqui para lhe ajudar!
 
-  \nDigite a opção desejada:
+  Digite a opção desejada:
   - Cardápio
   - Instruções
   - Pedido
   - Cancelar
   - Finalizar
 
-  \nPara cadastrar seu endereço, basta enviar sua localização atual.
+  Para cadastrar seu endereço, basta enviar sua localização atual.
   `
 
   sendMessages(client.telefone, message)
 }
 
-/*const orderMessage = async (client, context) => {
+const orderMessage = async (client, context) => {
   await Context.findByIdAndUpdate(context._id, { tipo: 'initial' })
 
-  let order = await Order.find({ clienteId: client._id, situacao: 'A' })
-}*/
+  let order = await Order.findOne({ clienteId: client._id, situacao: 'A' })
+
+  if (order) {
+    const orderItems = await OrderProduct.find({
+      pedidoId: order._id
+    }).populate('produtoId')
+
+    let message = ``
+
+    if (orderItems.length) {
+      let payTotal = 0.0
+      orderItems.forEach((item, index) => {
+        payTotal += item.valorUnitario * item.quantidade
+        message += `${item.quantidade} x ${item.produtoId.nome}\n`
+      })
+
+      let payFormated = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(parseFloat(payTotal))
+
+      message += `\nTotal: ${payFormated}`
+
+      sendMessages(client.telefone, message)
+    } else {
+      sendMessages(client.telefone, 'Não há nenhum produto no seu pedido')
+    }
+  } else {
+    sendMessages(
+      client.telefone,
+      `Não há pedidos abertos no nome de ${client.nome}`
+    )
+  }
+}
 
 const menuMessage = async (client, context) => {
   await Context.findByIdAndUpdate(context._id, { tipo: 'initial' })
@@ -103,15 +135,123 @@ const menuMessage = async (client, context) => {
   }).sort('categoriaId')
 
   let message = ''
+
   menu.forEach((item, index) => {
-    message += `${index + 1}. ${item.nome} - R$${item.valor}\n`
+    let totalValue = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(item.valor)
+
+    message += `${index + 1}. ${item.nome} - ${totalValue}\n`
     message += item.descricao ? ` ${item.descricao}\n` : '\n'
   })
 
-  message += `\nPara adicionar um item ao carrinho, basta informar o seu número!\n \nSe você quiser adicionar o mesmo produto, basta informar o número do produto e sua quantidade \nEx: 1x3 = 3 itens do produto número 1`
+  message += `Para adicionar um item ao carrinho, basta informar o seu número!\n \nSe você quiser adicionar o mesmo produto, basta informar o número do produto e sua quantidade\n \nEx: 1x3 = 3 itens do produto número 1`
 
   sendMessages(client.telefone, message)
 }
+
+const cancelMessage = async (client, context) => {
+  let order = await Order.find({ clienteId: client._id, situacao: 'A' })
+
+  if (order) {
+    await Context.findByIdAndUpdate(context._id, { tipo: 'cancel' })
+
+    sendMessages(
+      client.telefone,
+      `Tem certeza que deseja cancelar o pedido? (sim) ou (não)`
+    )
+  } else {
+    sendMessages(
+      client.telefone,
+      `Não há pedidos abertos no nome de ${client.nome}`
+    )
+  }
+}
+
+const denyMessage = async (client, context) => {
+  await Context.findByIdAndUpdate(context._id, { tipo: 'initial' })
+
+  switch (context.tipo) {
+    case 'cancel':
+      sendMessages(
+        client.telefone,
+        'Ok, digite *finalizar* para finalizar seu pedido, ou adicione um novo item!'
+      )
+      break
+
+    default:
+      notUnderstandMessage(client)
+      break
+  }
+}
+
+const confirmMessage = async (client, context) => {
+  switch (context.tipo) {
+    case 'cancel':
+      let pedido = await Order.findOneAndUpdate(
+        {
+          clienteId: client._id,
+          situacao: 'A'
+        },
+        { situacao: 'C' }
+      )
+      await Context.findByIdAndUpdate(context._id, { tipo: 'initial' })
+
+      if (pedido) {
+        sendMessages(client.telefone, 'Seu pedido foi cancelado com sucesso!')
+      } else {
+        sendMessages(
+          client.telefone,
+          `Não há pedidos abertos no nome de ${client.nome}`
+        )
+      }
+      break
+
+    default:
+      notUnderstandMessage(client)
+      break
+  }
+}
+
+const finishMessage = async (client, context) => {
+  let order = await Order.findOne({
+    clienteId: client._id,
+    situacao: 'A'
+  }).populate('restauranteId')
+
+  const [latitude, longitude] = client.endereco.coordenadas
+  const numero = client.endereco.numero
+
+  if (order) {
+    if (latitude && longitude && numero) {
+      await Order.findOneAndUpdate(
+        {
+          clienteId: client._id,
+          situacao: 'A'
+        },
+        { situacao: 'F' }
+      )
+      await Context.findByIdAndUpdate(context._id, { tipo: 'initial' })
+      sendMessages(client.telefone, `Seu pedido foi finalizado com sucesso!`)
+      sendMessages(
+        client.telefone,
+        `Nós da ${order.restauranteId.nome} agradecemos a preferência`
+      )
+    } else {
+      sendMessages(
+        client.telefone,
+        'Para finalizar seu pedido, por favor nos envie sua localização atual e digite *Finalizar* novamente'
+      )
+    }
+  } else {
+    sendMessages(
+      client.telefone,
+      `Não há pedidos abertos no nome de ${client.nome}`
+    )
+  }
+}
+
 const defaultMessage = async (client, context, text) => {
   switch (context.tipo) {
     case 'welcome':
@@ -122,38 +262,40 @@ const defaultMessage = async (client, context, text) => {
       if (text.indexOf('x') > -1) {
         const [product, quantity] = text.split('x')
 
-        const setMenu = await Product.find({
-          restauranteId: client.restauranteId,
-          situacao: 'A'
-        }).sort('categoriaId')
-        console.log(setMenu)
+        try {
+          const setMenu = await Product.find({
+            restauranteId: client.restauranteId,
+            situacao: 'A'
+          }).sort('categoriaId')
 
-        const newProduct = setMenu[parseInt(product) - 1]
-        console.log(newProduct)
+          const newProduct = setMenu[parseInt(product) - 1]
 
-        let order = await Order.findOne({
-          clienteId: client._id,
-          situacao: 'A'
-        })
-
-        if (!order) {
-          order = await Order.create({
+          let order = await Order.findOne({
             clienteId: client._id,
-            restauranteId: client.restauranteId
+            situacao: 'A'
           })
+
+          if (!order) {
+            order = await Order.create({
+              clienteId: client._id,
+              restauranteId: client.restauranteId
+            })
+          }
+
+          await OrderProduct.create({
+            pedidoId: order._id,
+            produtoId: newProduct._id,
+            valorUnitario: newProduct.valor,
+            quantidade: parseInt(quantity)
+          })
+
+          sendMessages(
+            client.telefone,
+            `${quantity} ${newProduct.nome}s foram adicionados ao carrinho`
+          )
+        } catch {
+          sendMessages(client.telefone, 'Este produto não existe')
         }
-
-        await OrderProduct.create({
-          pedidoId: order._id,
-          produtoId: newProduct._id,
-          valorUnitario: newProduct.valor,
-          quantidade: parseInt(quantity)
-        })
-
-        sendMessages(
-          client.telefone,
-          `${quantity} ${newProduct.nome}s foram adicionados ao carrinho`
-        )
       } else if (!isNaN(text)) {
         const setMenu = await Product.find({
           restauranteId: client.restauranteId,
@@ -220,7 +362,7 @@ const defaultMessage = async (client, context, text) => {
 
       break
     case 'cancel':
-      welcomeMessage(client)
+      // denyMessage(client, context)
       break
 
     default:
@@ -250,7 +392,7 @@ const clientMessage = async (phone, message) => {
     telefone: restauranteTelefone
   })
 
-  const cliente = await Clients.findOne({
+  let cliente = await Clients.findOne({
     telefone: clienteTelefone,
     restauranteId: restaurante._id
   })
@@ -281,7 +423,7 @@ const clientMessage = async (phone, message) => {
       cliente._id,
       {
         endereco: {
-          coordinates: [message.location.latitude, message.location.longitude]
+          coordenadas: [message.location.latitude, message.location.longitude]
         }
       },
       { new: true }
@@ -296,14 +438,20 @@ const clientMessage = async (phone, message) => {
       }
     )
 
-    defaultMessage(cliente, context, text)
+    sendMessages(
+      cliente.telefone,
+      'Por favor, informe o número da residência *somente números*'
+    )
   } else {
     switch (text) {
       case 'cardapio':
         menuMessage(cliente, context)
         break
-      case 'não':
-        sendMessages(cliente.telefone, 'Não')
+      case 'sim':
+        confirmMessage(cliente, context)
+        break
+      case 'nao':
+        denyMessage(cliente, context)
         break
       case 'instrucoes':
         welcomeMessage(cliente)
@@ -312,10 +460,10 @@ const clientMessage = async (phone, message) => {
         orderMessage(cliente, context)
         break
       case 'cancelar':
-        // welcomeMessage(cliente)
+        cancelMessage(cliente, context)
         break
       case 'finalizar':
-        //    welcomeMessage(cliente)
+        finishMessage(cliente, context)
         break
 
       default:
