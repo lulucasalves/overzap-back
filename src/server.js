@@ -3,6 +3,7 @@ const cors = require('cors')
 const router = require('./routes')
 require('./Config/Mongodb')
 require('./whatsapp')
+require('dotenv/config')
 
 //======================================================//
 
@@ -13,7 +14,7 @@ app.use(router)
 
 //==========================================================//
 
-const port = 5000
+const port = process.env.PORT || 5000
 
 app.listen(port, () => {
   console.log(`executando na porta ${port}`)
