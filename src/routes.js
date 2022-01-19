@@ -24,13 +24,13 @@ router.get('/categorys', CategoryController.index)
 router.post('/client', authenticate, ClientController.store)
 router.post('/client/:client_id', authenticate, ClientController.edit)
 router.delete('/client/:client_id', authenticate, ClientController.delete)
-router.get('/clients', authenticate, ClientController.index)
+router.get('/clients', ClientController.index)
 
 //PEDIDOS
 router.post('/order', authenticate, OrderController.store)
 router.post('/order/:order_id', authenticate, OrderController.edit)
 router.delete('/order/:order_id', authenticate, OrderController.delete)
-router.get('/orders', authenticate, OrderController.index)
+router.get('/orders', OrderController.index)
 router.post('/order/:order_id/add', authenticate, OrderController.addItem)
 
 //RESTAURANTES
