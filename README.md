@@ -1,4 +1,5 @@
 <h1>Overzap</h1>
+<p>Este projeto é um atendimento automático via WhatsApp, em que é possível efetuar a compra dos produtos do restaurante cadastrado automaticamente, sem precisar de interessão humana.</p>
 <img src="https://github.com/lulucasalves/overzap-api-back/blob/main/.github/img1.png" />
 <br />
 <h2>Tecnologias útlizadas</h2>
